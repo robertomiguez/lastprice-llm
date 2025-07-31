@@ -98,6 +98,15 @@ async function makeGroqRequest(
 
     if (!response.ok) {
       const errorText = await response.text();
+
+      if (response.status === 401) {
+        throw new Error("InvalidGroqApiKey");
+      }
+
+      if (response.status >= 500 && response.status < 600) {
+        throw new Error(`GroqServerError ${response.status}: ${errorText}`);
+      }
+
       throw new Error(`Groq API HTTP ${response.status}: ${errorText}`);
     }
 
@@ -276,7 +285,7 @@ export default {
 
     if (!env.GROQ_API_KEY) {
       console.error("Missing GROQ_API_KEY environment variable");
-      return createErrorResponse("Server configuration error", 500);
+      return createErrorResponse("Server configuration error", 503);
     }
 
     try {
@@ -294,6 +303,10 @@ export default {
 
       if ((error as Error).message.includes("Missing required field")) {
         return createErrorResponse((error as Error).message);
+      }
+
+      if ((error as Error).message === "InvalidGroqApiKey") {
+        return createErrorResponse("Invalid or missing GROQ_API_KEY", 503);
       }
 
       return createErrorResponse("Internal server error", 500);
