@@ -100,7 +100,7 @@ async function makeGroqRequest(
       const errorText = await response.text();
 
       if (response.status === 401) {
-        throw new Error("InvalidGroqApiKey");
+        throw new Error("Authentication failed: Invalid Groq API key");
       }
 
       if (response.status >= 500 && response.status < 600) {
@@ -305,8 +305,8 @@ export default {
         return createErrorResponse((error as Error).message);
       }
 
-      if ((error as Error).message === "InvalidGroqApiKey") {
-        return createErrorResponse("Invalid or missing GROQ_API_KEY", 503);
+      if ((error as Error).message === "Authentication failed: Invalid Groq API key") {
+        return createErrorResponse("Invalid or missing GROQ_API_KEY", 401);
       }
 
       return createErrorResponse("Internal server error", 500);
